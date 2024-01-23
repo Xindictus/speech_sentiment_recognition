@@ -21,5 +21,5 @@ class DatasetParser(ABC):
         This function will include the logic of parsing
         the Kaggle audio files and creating a dataset
         out of them
-        """        
-        pass
+        """
+        raise NotImplementedError()
