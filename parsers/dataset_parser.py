@@ -19,6 +19,15 @@ class DatasetParser(ABC):
         else:
             raise ValueError('path.not_exists')
 
+    @abstractmethod
+    def parse(self) -> None:
+        """_summary_
+        This function will include the logic of parsing
+        the Kaggle audio files and creating a dataset
+        out of them
+        """
+        raise NotImplementedError()
+
     def is_valid_path(self, path: str) -> bool:
         """_summary_
 
@@ -30,14 +39,28 @@ class DatasetParser(ABC):
         """
         return exists(path)
 
-    @abstractmethod
-    def parse(self) -> None:
+    def noise(y):
+        noise_amp = 0.035 * np.random.uniform() * np.amax(y)
+        return (y + noise_amp*np.random.normal(size=y.shape[0]))
+
+    ######################################
+    #            Featurization           #
+    ######################################
+    def chroma_stft(self, y, sr) -> np.array:
         """_summary_
-        This function will include the logic of parsing
-        the Kaggle audio files and creating a dataset
-        out of them
+
+        Compute a chromagram from a waveform or power spectrogram.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
         """
-        raise NotImplementedError()
+        # Chroma_stft
+        stft = np.abs(librosa.stft(y))
+        return np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
 
     def mfcc(self, y, sr) -> np.array:
         """_summary_
@@ -45,15 +68,31 @@ class DatasetParser(ABC):
 
         Args:
             y: audio time series
+            sr: sample rate
 
         Returns:
             np.array
         """
         return np.mean(librosa.feature.mfcc(y=y, sr=sr).T, axis=0)
 
-    def zero_crossing_rate(self, y) -> np.array:
+    def mel(self, y, sr) -> np.array:
         """_summary_
-        Compute the zero-crossing rate of an audio time series.
+
+        Compute a mel-scaled spectrogram.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
+
+    def pitch(self, y) -> np.array:
+        """_summary_
+
+        Pitch tracking on thresholded parabolically-interpolated STFT.
 
         Args:
             y: audio time series
@@ -61,9 +100,23 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.zero_crossing_rate(y=y).T, axis=0)
+        return librosa.piptrack(y=y)
 
-    def fourier_transforms(self, y) -> np.array:
+    def rms(self, y) -> np.array:
+        """_summary_
+
+        Compute root-mean-square (RMS) value for each frame,
+        either from the audio samples y or from a spectrogram S.
+
+        Args:
+            y: audio time series
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.rms(y=y).T, axis=0)
+
+    def stft(self, y) -> np.array:
         """_summary_
         Short-time Fourier transform (STFT).
 
@@ -79,11 +132,9 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.stft(y=y).T, axis=0)
 
-    def rms(self, y):
+    def zcr(self, y) -> np.array:
         """_summary_
-
-        Compute root-mean-square (RMS) value for each frame,
-        either from the audio samples y or from a spectrogram S.
+        Compute the zero-crossing rate of an audio time series.
 
         Args:
             y: audio time series
@@ -91,19 +142,11 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.rms(y=y).T, axis=0)
+        return np.mean(librosa.feature.zero_crossing_rate(y=y).T, axis=0)
 
-    def pitch(self, y):
-        return librosa.piptrack(y=y)
-
-    def mel(self, y, sr):
-        return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
-
-    def chroma_stft(self, y, sr):
-        # Chroma_stft
-        stft = np.abs(librosa.stft(y))
-        return np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
-
+    ######################################
+    #     Post-processing of features    #
+    ######################################
     def post_processing(self):
         # Pad MFCCs
         mfcc_max = self.df['mfcc'].apply(lambda x: len(x)).max()
@@ -115,6 +158,9 @@ class DatasetParser(ABC):
         self.df['stft'] = self.df['stft'] \
             .apply(lambda x: np.pad(x, (0, mfcc_max - len(x))))
 
+    ######################################
+    #              Plotting              #
+    ######################################
     def waveplots(self):
         fig = plt.figure(figsize=(15, 15))
         fig.subplots_adjust(hspace=0.4, wspace=0.4)
@@ -162,6 +208,9 @@ class DatasetParser(ABC):
         plt.ylabel('Count')
         plt.show()
 
+    ######################################
+    #             DF Handling            #
+    ######################################
     def array2string(self, npArr):
         array_settings = {
             'data': npArr.tolist(),
@@ -193,6 +242,6 @@ class DatasetParser(ABC):
         # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: np.std(x, axis=0))
         # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
         #     .apply(lambda x: np.std(x, axis=0))
-        self.df['mfcc'] = self.df['mfcc'].apply(np.mean)
-        self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
-            .apply(np.mean)
+        # self.df['mfcc'] = self.df['mfcc'].apply(np.mean)
+        # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
+        #     .apply(np.mean)
