@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 
-from dataset_parser import DatasetParser
+from parsers.dataset_parser import DatasetParser
 
 
 class TorontoParser(DatasetParser):
@@ -14,7 +14,7 @@ class TorontoParser(DatasetParser):
         'sample_rate': int,
         'mfcc': np.double,
         'zero_crossing_rate': np.double,
-        'fourier_transforms': np.double,
+        'stft': np.double,
         'label': str,
     }
 
