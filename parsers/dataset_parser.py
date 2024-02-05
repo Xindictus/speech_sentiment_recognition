@@ -93,6 +93,17 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.rms(y=y).T, axis=0)
 
+    def pitch(self, y):
+        return librosa.piptrack(y=y)
+
+    def mel(self, y, sr):
+        return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
+
+    def chroma_stft(self, y, sr):
+        # Chroma_stft
+        stft = np.abs(librosa.stft(y))
+        return np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
+
     def post_processing(self):
         # Pad MFCCs
         mfcc_max = self.df['mfcc'].apply(lambda x: len(x)).max()
