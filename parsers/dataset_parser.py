@@ -20,7 +20,7 @@ class DatasetParser(ABC):
             raise ValueError('path.not_exists')
 
     def is_valid_path(self, path: str) -> bool:
-        """
+        """_summary_
 
         Args:
             path (str): Absolute path to file/folder
@@ -32,7 +32,7 @@ class DatasetParser(ABC):
 
     @abstractmethod
     def parse(self) -> None:
-        """
+        """_summary_
         This function will include the logic of parsing
         the Kaggle audio files and creating a dataset
         out of them
@@ -40,8 +40,11 @@ class DatasetParser(ABC):
         raise NotImplementedError()
 
     def mfcc(self, y, sr) -> np.array:
-        """
+        """_summary_
         Mel-frequency cepstral coefficients (MFCCs)
+
+        Args:
+            y: audio time series
 
         Returns:
             np.array
@@ -49,8 +52,11 @@ class DatasetParser(ABC):
         return np.mean(librosa.feature.mfcc(y=y, sr=sr).T, axis=0)
 
     def zero_crossing_rate(self, y) -> np.array:
-        """
+        """_summary_
         Compute the zero-crossing rate of an audio time series.
+
+        Args:
+            y: audio time series
 
         Returns:
             np.array
@@ -58,17 +64,34 @@ class DatasetParser(ABC):
         return np.mean(librosa.feature.zero_crossing_rate(y=y).T, axis=0)
 
     def fourier_transforms(self, y) -> np.array:
-        """
+        """_summary_
         Short-time Fourier transform (STFT).
 
         The STFT represents a signal in the time-frequency domain by
         computing discrete Fourier transforms (DFT) over short
         overlapping windows.
 
+        Args:
+            y: audio time series
+
         Returns:
             np.array
         """
         return np.mean(librosa.stft(y=y).T, axis=0)
+
+    def rms(self, y):
+        """_summary_
+
+        Compute root-mean-square (RMS) value for each frame,
+        either from the audio samples y or from a spectrogram S.
+
+        Args:
+            y: audio time series
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.rms(y=y).T, axis=0)
 
     def post_processing(self):
         # Pad MFCCs
