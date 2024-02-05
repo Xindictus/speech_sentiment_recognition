@@ -17,11 +17,10 @@ def main():
     dataset_path = f'{CURRENT_DIR}/datasets/toronto'
     parser = TorontoParser(dataset_path)
 
-    df = parser \
+    parser \
         .parse() \
-        .extract_features()
-
-    print(df)
+        .extract_features() \
+        .export('feat.csv')
 
 
 if __name__ == '__main__':

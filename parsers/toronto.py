@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import librosa
+import numpy as np
 import os
 import pandas as pd
 
-from .dataset_parser import DatasetParser
+from dataset_parser import DatasetParser
 
 
 class TorontoParser(DatasetParser):
     COLS = {
         'file': str,
-        'xxxxxx': str,
+        'sample_rate': int,
+        'mfcc': np.double,
+        'zero_crossing_rate': np.double,
+        'fourier_transforms': np.double,
         'label': str,
     }
 
@@ -30,9 +35,13 @@ class TorontoParser(DatasetParser):
 
         for wav in self.wavList:
             label = os.path.basename(wav).split('_')[2].split('.')[0]
+            y, sr = librosa.load(wav)
             df.loc[len(df.index)] = [
                 wav,
-                '123',
+                sr,
+                self.mfcc(y, sr),
+                self.zero_crossing_rate(y),
+                self.fourier_transforms(y),
                 'pleasant_surprise' if label == 'ps' else label
             ]
 
