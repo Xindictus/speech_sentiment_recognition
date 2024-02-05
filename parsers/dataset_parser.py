@@ -4,17 +4,18 @@ import json
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 
 from abc import ABC, abstractmethod
 from os.path import exists
 
 
 class DatasetParser(ABC):
-    def __init__(self, _dataset_path, _input=None):
+    def __init__(self, _dataset_path):
         if self.is_valid_path(_dataset_path):
             self.dataset_path = _dataset_path
             self.wavList = []
-            self.df = _input
         else:
             raise ValueError('path.not_exists')
 
@@ -61,7 +62,8 @@ class DatasetParser(ABC):
         Short-time Fourier transform (STFT).
 
         The STFT represents a signal in the time-frequency domain by
-        computing discrete Fourier transforms (DFT) over short overlapping windows.
+        computing discrete Fourier transforms (DFT) over short
+        overlapping windows.
 
         Returns:
             np.array
@@ -91,6 +93,41 @@ class DatasetParser(ABC):
             librosa.display.waveplot(data, sr=sample_rate)
         plt.savefig('class_examples.png')
 
+    def get_color(self, lbl):
+        return {
+            'fear': 'red',
+            'disgust': 'blue',
+            'pleasant_surprise': 'green',
+            'sad': 'yellow',
+            'angry': 'purple',
+            'neutral': 'orange',
+            'happy': 'pink'
+        }[lbl]
+
+    def scatter_plot(self, cols):
+        fig, ax = plt.subplots()
+        for label in self.df['label'].unique():
+            color = self.get_color(label)
+            tmp = self.df[self.df['label'] == label]
+            ax.scatter(tmp[cols[0]], tmp[cols[1]], color=color, label=label)
+            del tmp
+
+        ax.legend()
+        ax.grid(True)
+
+        plt.show()
+
+    def label_dist(self):
+        sns.countplot(
+            x='label',
+            data=self.df,
+            order=self.df['label'].value_counts().index
+        )
+        plt.title('Count of Each Label')
+        plt.xlabel('Label')
+        plt.ylabel('Count')
+        plt.show()
+
     def array2string(self, npArr):
         array_settings = {
             'data': npArr.tolist(),
@@ -105,7 +142,23 @@ class DatasetParser(ABC):
         arr = np.array(array_settings['data'], dtype=array_settings['dtype'])
         return arr.reshape(array_settings['shape'])
 
-    def export(self, nm):
+    def export(self, path):
         exp_df = self.df.copy()
         exp_df['mfcc'] = exp_df['mfcc'].apply(lambda x: self.array2string(x))
-        exp_df.to_csv(nm, index=False)
+        exp_df['zero_crossing_rate'] = exp_df['zero_crossing_rate'] \
+            .apply(lambda x: self.array2string(x))
+        # exp_df['stft'] = exp_df['stft'].apply(lambda x: self.array2string(x))
+        exp_df.to_csv(path, index=False)
+
+    def import_df(self):
+        self.df = pd.read_csv(self.dataset_path)
+        self.df['mfcc'] = self.df['mfcc'].apply(lambda x: self.string2array(x))
+        self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
+            .apply(lambda x: self.string2array(x))
+
+        # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: np.std(x, axis=0))
+        # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
+        #     .apply(lambda x: np.std(x, axis=0))
+        self.df['mfcc'] = self.df['mfcc'].apply(np.mean)
+        self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
+            .apply(np.mean)
