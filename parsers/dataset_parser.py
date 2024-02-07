@@ -12,10 +12,19 @@ from os.path import exists
 
 
 class DatasetParser(ABC):
+    FEATURES = [
+        'mfcc',
+        'mel',
+        'rms',
+        'stft',
+        'zcr'
+    ]
+
     def __init__(self, _dataset_path):
         if self.is_valid_path(_dataset_path):
             self.dataset_path = _dataset_path
             self.wavList = []
+            self.cols = []
         else:
             raise ValueError('path.not_exists')
 
@@ -44,7 +53,7 @@ class DatasetParser(ABC):
         return (y + noise_amp*np.random.normal(size=y.shape[0]))
 
     ######################################
-    #            Featurization           #
+    #              Features              #
     ######################################
     def chroma_stft(self, y, sr) -> np.array:
         """_summary_
@@ -88,19 +97,6 @@ class DatasetParser(ABC):
             np.array
         """
         return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
-
-    def pitch(self, y) -> np.array:
-        """_summary_
-
-        Pitch tracking on thresholded parabolically-interpolated STFT.
-
-        Args:
-            y: audio time series
-
-        Returns:
-            np.array
-        """
-        return librosa.piptrack(y=y)
 
     def rms(self, y) -> np.array:
         """_summary_
@@ -147,16 +143,35 @@ class DatasetParser(ABC):
     ######################################
     #     Post-processing of features    #
     ######################################
-    def post_processing(self):
-        # Pad MFCCs
-        mfcc_max = self.df['mfcc'].apply(lambda x: len(x)).max()
-        self.df['mfcc'] = self.df['mfcc'] \
-            .apply(lambda x: np.pad(x, (0, mfcc_max - len(x))))
+    def padding(self):
+        # Pad features and add to feature array
+        for col in self.cols:
+            if col in self.FEATURES:
+                max = self.df[col].apply(lambda x: len(x)).max()
+                self.df[col] = self.df[col] \
+                    .apply(lambda x: np.pad(x, (0, max - len(x))))
 
-        # Pad STFTs
-        mfcc_max = self.df['stft'].apply(lambda x: len(x)).max()
-        self.df['stft'] = self.df['stft'] \
-            .apply(lambda x: np.pad(x, (0, mfcc_max - len(x))))
+    def post_processing(self):
+        self.padding()
+
+        # Stack features
+        self.df['feature_arr'] = pd.Series(
+            [np.array([]) for _ in range(len(self.df))]
+        )
+        self.df['feature_arr'] = self.df.apply(
+            lambda row: np.hstack([row[i] for i in self.FEATURES]),
+            axis=1
+        )
+
+        feat_df = pd.DataFrame(
+            self.df['feature_arr'].tolist(),
+            index=self.df.index
+        )
+        feat_df.columns = [f'feature_{i + 1}' for i in range(feat_df.shape[1])]
+        feat_df['label'] = self.df['label']
+        self.df = feat_df
+
+        return self
 
     ######################################
     #              Plotting              #
@@ -226,18 +241,18 @@ class DatasetParser(ABC):
         return arr.reshape(array_settings['shape'])
 
     def export(self, path):
-        exp_df = self.df.copy()
-        exp_df['mfcc'] = exp_df['mfcc'].apply(lambda x: self.array2string(x))
-        exp_df['zero_crossing_rate'] = exp_df['zero_crossing_rate'] \
-            .apply(lambda x: self.array2string(x))
+        # exp_df = self.df.copy()
+        # exp_df['mfcc'] = exp_df['mfcc'].apply(lambda x: self.array2string(x))
+        # exp_df['zcr'] = exp_df['zcr'] \
+        #     .apply(lambda x: self.array2string(x))
         # exp_df['stft'] = exp_df['stft'].apply(lambda x: self.array2string(x))
-        exp_df.to_csv(path, index=False)
+        self.df.to_csv(path, index=False)
 
     def import_df(self):
         self.df = pd.read_csv(self.dataset_path)
-        self.df['mfcc'] = self.df['mfcc'].apply(lambda x: self.string2array(x))
-        self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
-            .apply(lambda x: self.string2array(x))
+        # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: self.string2array(x))
+        # self.df['zcr'] = self.df['zcr'] \
+        #     .apply(lambda x: self.string2array(x))
 
         # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: np.std(x, axis=0))
         # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \

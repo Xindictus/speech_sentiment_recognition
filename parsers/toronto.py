@@ -12,9 +12,11 @@ class TorontoParser(DatasetParser):
     COLS = {
         'file': str,
         'sample_rate': int,
-        'mfcc': np.double,
-        'zero_crossing_rate': np.double,
-        'stft': np.double,
+        'mfcc': np.array,
+        'mel': np.array,
+        'rms': np.array,
+        'stft': np.array,
+        'zcr': np.array,
         'label': str,
     }
 
@@ -40,8 +42,10 @@ class TorontoParser(DatasetParser):
                 wav,
                 sr,
                 self.mfcc(y, sr),
-                self.zero_crossing_rate(y),
-                self.fourier_transforms(y),
+                self.mel(y, sr),
+                self.rms(y),
+                self.stft(y),
+                self.zcr(y),
                 'pleasant_surprise' if label == 'ps' else label
             ]
 
