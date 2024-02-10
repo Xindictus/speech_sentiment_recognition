@@ -17,6 +17,7 @@ class DatasetParser(ABC):
         'mfcc',
         'mel',
         'rms',
+        'spce',
         'stft',
         'zcr'
     ]
@@ -25,7 +26,6 @@ class DatasetParser(ABC):
         if self._is_valid_path(_dataset_path):
             self.dataset_path = _dataset_path
             self.wavList = []
-            self.cols = []
         else:
             raise ValueError('path.not_exists')
 
@@ -174,7 +174,7 @@ class DatasetParser(ABC):
     ######################################
     def padding(self):
         # Pad features and add to feature array
-        for col in self.cols:
+        for col in self.COLS:
             if col in self.FEATURES:
                 max = self.df[col].apply(lambda x: len(x)).max()
                 self.df[col] = self.df[col] \
