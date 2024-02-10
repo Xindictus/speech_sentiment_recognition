@@ -123,6 +123,24 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.rms(y=y).T, axis=0)
 
+    def spce(self, y, sr) -> np.array:
+        """_summary_
+
+        Compute the spectral centroid.
+
+        Each frame of a magnitude spectrogram is normalized and
+        treated as a distribution over frequency bins, from which
+        the mean (centroid) is extracted per frame.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
+
     def stft(self, y) -> np.array:
         """_summary_
         Short-time Fourier transform (STFT).
