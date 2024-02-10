@@ -20,16 +20,6 @@ class TorontoParser(DatasetParser):
         'label': str,
     }
 
-    def parse(self) -> list:
-        files = []
-        for root, _, fls in os.walk(self.dataset_path, topdown=False):
-            for name in fls:
-                files.append(os.path.join(root, name))
-
-        self.wavList = files
-
-        return self
-
     def extract_features(self) -> None:
         df = pd.DataFrame(
             columns=self.COLS,

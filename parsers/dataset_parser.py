@@ -4,6 +4,7 @@ import json
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import pandas as pd
 import seaborn as sns
 
@@ -21,15 +22,25 @@ class DatasetParser(ABC):
     ]
 
     def __init__(self, _dataset_path):
-        if self.is_valid_path(_dataset_path):
+        if self._is_valid_path(_dataset_path):
             self.dataset_path = _dataset_path
             self.wavList = []
             self.cols = []
         else:
             raise ValueError('path.not_exists')
 
-    @abstractmethod
     def parse(self) -> None:
+        files = []
+        for root, _, fls in os.walk(self.dataset_path, topdown=False):
+            for name in fls:
+                files.append(os.path.join(root, name))
+
+        self.wavList = files
+
+        return self
+
+    @abstractmethod
+    def extract_features(self) -> None:
         """_summary_
         This function will include the logic of parsing
         the Kaggle audio files and creating a dataset
@@ -37,7 +48,7 @@ class DatasetParser(ABC):
         """
         raise NotImplementedError()
 
-    def is_valid_path(self, path: str) -> bool:
+    def _is_valid_path(self, path: str) -> bool:
         """_summary_
 
         Args:
