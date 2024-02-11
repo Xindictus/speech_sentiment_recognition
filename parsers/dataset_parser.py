@@ -10,7 +10,7 @@ import seaborn as sns
 
 from abc import ABC, abstractmethod
 from os.path import exists
-
+from sklearn.preprocessing import StandardScaler
 
 class DatasetParser(ABC):
     FEATURES = [
@@ -18,6 +18,14 @@ class DatasetParser(ABC):
         'mel',
         'rms',
         'spce',
+        'stft',
+        'zcr'
+    ]
+
+    PADDABLE = [
+        'mfcc',
+        'mel',
+        'rms',
         'stft',
         'zcr'
     ]
@@ -66,10 +74,40 @@ class DatasetParser(ABC):
     ######################################
     #              Features              #
     ######################################
+    def cens(self, y, sr) -> np.array:
+        """_summary_
+
+        Constant-Q chromagram.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.chroma_cens(y=y, sr=sr).T, axis=0)
+
+    def cqt(self, y, sr) -> np.array:
+        """_summary_
+
+        Constant-Q chromagram.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.mean(librosa.feature.chroma_cqt(y=y, sr=sr).T, axis=0)
+
     def chroma_stft(self, y, sr) -> np.array:
         """_summary_
 
         Compute a chromagram from a waveform or power spectrogram.
+
+        This feature is more useful for music-related tasks.
 
         Args:
             y: audio time series
@@ -93,7 +131,7 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.mfcc(y=y, sr=sr).T, axis=0)
+        return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13).T, axis=0)
 
     def mel(self, y, sr) -> np.array:
         """_summary_
@@ -108,6 +146,21 @@ class DatasetParser(ABC):
             np.array
         """
         return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
+
+    def pitch(self, y, sr) -> np.array:
+        """_summary_
+
+        Pitch tracking on thresholded parabolically-interpolated STFT.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        pitches, _ = librosa.piptrack(y=y, sr=sr)
+        return np.mean(pitches[pitches > 0])
 
     def rms(self, y) -> np.array:
         """_summary_
@@ -155,7 +208,12 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.stft(y=y).T, axis=0)
+        return np.mean(np.abs(librosa.stft(
+            y=y,
+            n_fft=2048,
+            hop_length=512,
+            window='hann'
+        )).T, axis=0)
 
     def zcr(self, y) -> np.array:
         """_summary_
@@ -175,7 +233,7 @@ class DatasetParser(ABC):
     def padding(self):
         # Pad features and add to feature array
         for col in self.COLS:
-            if col in self.FEATURES:
+            if col in self.PADDABLE:
                 max = self.df[col].apply(lambda x: len(x)).max()
                 self.df[col] = self.df[col] \
                     .apply(lambda x: np.pad(x, (0, max - len(x))))
@@ -187,6 +245,7 @@ class DatasetParser(ABC):
         self.df['feature_arr'] = pd.Series(
             [np.array([]) for _ in range(len(self.df))]
         )
+
         self.df['feature_arr'] = self.df.apply(
             lambda row: np.hstack([row[i] for i in self.FEATURES]),
             axis=1
@@ -197,8 +256,16 @@ class DatasetParser(ABC):
             index=self.df.index
         )
         feat_df.columns = [f'feature_{i + 1}' for i in range(feat_df.shape[1])]
-        feat_df['label'] = self.df['label']
-        self.df = feat_df
+
+        # Scale the features
+        scaler = StandardScaler()
+        scaled_features = scaler.fit_transform(feat_df)
+        scaled_features = pd.DataFrame(
+            scaled_features,
+            columns=feat_df.columns)
+
+        scaled_features['label'] = self.df['label']
+        self.features = scaled_features
 
         return self
 
@@ -269,23 +336,13 @@ class DatasetParser(ABC):
         arr = np.array(array_settings['data'], dtype=array_settings['dtype'])
         return arr.reshape(array_settings['shape'])
 
-    def export(self, path):
-        # exp_df = self.df.copy()
-        # exp_df['mfcc'] = exp_df['mfcc'].apply(lambda x: self.array2string(x))
-        # exp_df['zcr'] = exp_df['zcr'] \
-        #     .apply(lambda x: self.array2string(x))
-        # exp_df['stft'] = exp_df['stft'].apply(lambda x: self.array2string(x))
-        self.df.to_csv(path, index=False)
+    def export(self, path, option = 'features'):
+        if option == 'dataset':
+            self.df.to_csv(path, index=False)
+        else:
+            self.features.to_csv(path, index=False)
+
+        return self
 
     def import_df(self):
-        self.df = pd.read_csv(self.dataset_path)
-        # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: self.string2array(x))
-        # self.df['zcr'] = self.df['zcr'] \
-        #     .apply(lambda x: self.string2array(x))
-
-        # self.df['mfcc'] = self.df['mfcc'].apply(lambda x: np.std(x, axis=0))
-        # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
-        #     .apply(lambda x: np.std(x, axis=0))
-        # self.df['mfcc'] = self.df['mfcc'].apply(np.mean)
-        # self.df['zero_crossing_rate'] = self.df['zero_crossing_rate'] \
-        #     .apply(np.mean)
+        self.df = pd.read_csv(self.csv_path)
