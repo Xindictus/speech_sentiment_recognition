@@ -4,6 +4,7 @@ import logging
 import os
 import time
 
+from parsers.ravdess import RavdessParser
 from parsers.toronto import TorontoParser
 
 # Define PY script folder
@@ -23,18 +24,35 @@ def main():
     )
     parser_logger.addHandler(handler)
 
-    dataset_path = f'{CURRENT_DIR}/datasets/toronto'
-    parser = TorontoParser(dataset_path)
+    ravdess_path = f'{CURRENT_DIR}/datasets/ravdess'
+    toronto_path = f'{CURRENT_DIR}/datasets/toronto'
 
+    ravdess = RavdessParser(ravdess_path)
+    toronto = TorontoParser(toronto_path)
+
+    # Toronto extraction
     start = time.time()
-    parser \
+
+    toronto \
         .parse() \
         .extract_features() \
         .post_processing() \
-        .export('feat.csv')
+        .export('toronto.csv', 'dataset') \
+        .export('toronto_features.csv')
 
     end = time.time()
-    parser_logger.info(f"Total process runtime: {(end - start):0.2f}s")
+    parser_logger.info(f"Total process runtime (toronto): {(end - start):0.2f}s")
+
+    # Ravdess extraction
+    ravdess \
+        .parse() \
+        .extract_features() \
+        .post_processing() \
+        .export('ravdess.csv', 'dataset') \
+        .export('ravdess_features.csv')
+
+    end = time.time()
+    parser_logger.info(f"Total process runtime (ravdess): {(end - start):0.2f}s")
 
 
 if __name__ == '__main__':
