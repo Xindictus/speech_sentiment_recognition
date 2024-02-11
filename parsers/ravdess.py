@@ -39,7 +39,7 @@ class RavdessParser(DatasetParser):
     }
 
     def get_gender(self, val):
-        return 'male' if val % 2 == 1 else 'female'
+        return 'male' if int(val) % 2 == 1 else 'female'
 
     def extract_features(self) -> None:
         data = []
@@ -73,7 +73,7 @@ class RavdessParser(DatasetParser):
                 self.spce(y, sr),
                 self.stft(y),
                 self.zcr(y),
-                self.EMOTIONS(wav_parts[2])
+                self.EMOTIONS[wav_parts[2]]
             ])
 
             self.df = pd.DataFrame(data, columns=self.COLS)
