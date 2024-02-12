@@ -44,6 +44,8 @@ def main():
     parser_logger.info(f"Total process runtime (toronto): {(end - start):0.2f}s")
 
     # Ravdess extraction
+    start = time.time()
+
     ravdess \
         .parse() \
         .extract_features() \

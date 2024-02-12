@@ -76,6 +76,6 @@ class RavdessParser(DatasetParser):
                 self.EMOTIONS[wav_parts[2]]
             ])
 
-            self.df = pd.DataFrame(data, columns=self.COLS)
+        self.df = pd.DataFrame(data, columns=self.COLS)
 
-            return self
+        return self

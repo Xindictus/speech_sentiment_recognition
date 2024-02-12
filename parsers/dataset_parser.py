@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from os.path import exists
 from sklearn.preprocessing import StandardScaler
 
+
 class DatasetParser(ABC):
     FEATURES = [
         'mfcc',
@@ -336,7 +337,7 @@ class DatasetParser(ABC):
         arr = np.array(array_settings['data'], dtype=array_settings['dtype'])
         return arr.reshape(array_settings['shape'])
 
-    def export(self, path, option = 'features'):
+    def export(self, path, option='features'):
         if option == 'dataset':
             self.df.to_csv(path, index=False)
         else:
