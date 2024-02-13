@@ -277,6 +277,8 @@ class DatasetParser(ABC):
         scaled_features['label'] = self.df['label']
         self.features = scaled_features
 
+        self.df.drop(columns=['feature_arr'], inplace=True)
+
         return self
 
     ######################################
