@@ -15,7 +15,7 @@ class RavdessParser(DatasetParser):
         '03': 'happy',
         '04': 'sad',
         '05': 'angry',
-        '06': 'fearful',
+        '06': 'fear',
         '07': 'disgust',
         '08': 'surprised'
     }
