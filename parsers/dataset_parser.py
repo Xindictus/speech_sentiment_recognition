@@ -19,7 +19,6 @@ class DatasetParser(ABC):
         'mel',
         'rms',
         'spce',
-        'stft',
         'zcr'
     ]
 

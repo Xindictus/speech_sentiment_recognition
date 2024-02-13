@@ -16,7 +16,6 @@ class TorontoParser(DatasetParser):
         'mel': np.array,
         'rms': np.array,
         'spce': np.array,
-        'stft': np.array,
         'zcr': np.array,
         'label': str,
     }
@@ -37,7 +36,6 @@ class TorontoParser(DatasetParser):
                 self.mel(y, sr),
                 self.rms(y),
                 self.spce(y, sr),
-                self.stft(y),
                 self.zcr(y),
                 self.label_handling(label)
             ])

@@ -33,7 +33,6 @@ class RavdessParser(DatasetParser):
         'mel': np.array,
         'rms': np.array,
         'spce': np.array,
-        'stft': np.array,
         'zcr': np.array,
         'label': str,
     }
@@ -71,7 +70,6 @@ class RavdessParser(DatasetParser):
                 self.mel(y, sr),
                 self.rms(y),
                 self.spce(y, sr),
-                self.stft(y),
                 self.zcr(y),
                 self.EMOTIONS[wav_parts[2]]
             ])
