@@ -50,6 +50,8 @@ def main():
         .export(toronto_export, 'dataset') \
         .export(toronto_features)
 
+    del toronto
+
     end = time.time()
     parser_logger.info(f'Total runtime (toronto): {(end - start):0.2f}s')
 
@@ -64,6 +66,8 @@ def main():
         .post_processing() \
         .export(ravdess_export, 'dataset') \
         .export(ravdess_features)
+
+    del ravdess
 
     end = time.time()
     parser_logger.info(f'Total runtime (ravdess): {(end - start):0.2f}s')
