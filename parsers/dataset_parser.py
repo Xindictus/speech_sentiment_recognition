@@ -239,6 +239,13 @@ class DatasetParser(ABC):
                 self.df[col] = self.df[col] \
                     .apply(lambda x: np.pad(x, (0, max - len(x))))
 
+    def label_generation(self, cell, label):
+        rng = len(cell) if (type(cell) is np.ndarray) else 1
+        return [f'{label}_{i + 1}' for i in range(rng)]
+
+    def flatten(self, xss):
+        return [x for xs in xss for x in xs]
+
     def post_processing(self):
         self.padding()
 
@@ -256,7 +263,9 @@ class DatasetParser(ABC):
             self.df['feature_arr'].tolist(),
             index=self.df.index
         )
-        feat_df.columns = [f'feature_{i + 1}' for i in range(feat_df.shape[1])]
+
+        cols = [self.label_generation(self.df[i][0], i) for i in self.FEATURES]
+        feat_df.columns = self.flatten(cols)
 
         # Scale the features
         scaler = StandardScaler()
