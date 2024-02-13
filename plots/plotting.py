@@ -23,7 +23,7 @@ plt.title('Box Plot of Mean MFCC for Each Emotion')
 plt.show()
 
 # Create a box plot for all means and std of extracted features
-    
+
 plt.figure(figsize=(10, 6))
 sns.boxplot(x='Emotion', y='Mean waveform', data=df)
 plt.title('Box Plot of Mean Waveform for Each Emotion')

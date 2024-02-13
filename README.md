@@ -17,3 +17,6 @@ Sentiment Recognition in speech using Machine Learning (ML)
    - Go into the app directory
    - Source your virtual env
    - Install requirements with `pip install -r requirements.txt`
+4. Run setup to export `PYTHONPATH`
+
+    `source setup.sh`

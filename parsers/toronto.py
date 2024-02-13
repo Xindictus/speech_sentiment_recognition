@@ -15,40 +15,33 @@ class TorontoParser(DatasetParser):
         'mfcc': np.array,
         'mel': np.array,
         'rms': np.array,
+        'spce': np.array,
         'stft': np.array,
         'zcr': np.array,
         'label': str,
     }
 
-    def parse(self) -> list:
-        files = []
-        for root, _, fls in os.walk(self.dataset_path, topdown=False):
-            for name in fls:
-                files.append(os.path.join(root, name))
-
-        self.wavList = files
-
-        return self
+    def label_handling(self, lb) -> str:
+        return 'pleasant_surprise' if lb == 'ps' else lb
 
     def extract_features(self) -> None:
-        df = pd.DataFrame(
-            columns=self.COLS,
-        )
+        data = []
 
         for wav in self.wavList:
             label = os.path.basename(wav).split('_')[2].split('.')[0]
             y, sr = librosa.load(wav)
-            df.loc[len(df.index)] = [
+            data.append([
                 wav,
                 sr,
                 self.mfcc(y, sr),
                 self.mel(y, sr),
                 self.rms(y),
+                self.spce(y, sr),
                 self.stft(y),
                 self.zcr(y),
-                'pleasant_surprise' if label == 'ps' else label
-            ]
+                self.label_handling(label)
+            ])
 
-        self.df = df
+        self.df = pd.DataFrame(data, columns=self.COLS)
 
         return self
