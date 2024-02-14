@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import librosa
-import numpy as np
 import os
 import pandas as pd
 
@@ -28,13 +27,7 @@ class RavdessParser(DatasetParser):
         'emotional intensity': int,
         'statement': int,
         'repetition': int,
-        'gender': str,
-        'mfcc': np.array,
-        'mel': np.array,
-        'rms': np.array,
-        'spce': np.array,
-        'zcr': np.array,
-        'label': str,
+        'gender': str
     }
 
     def get_gender(self, val):
@@ -42,10 +35,14 @@ class RavdessParser(DatasetParser):
 
     def extract_features(self) -> None:
         data = []
+        self.finalize_col_labels()
 
         for wav in self.wavList:
             wav_parts = os.path.basename(wav).split('.')[0].split('-')
             y, sr = librosa.load(wav)
+
+            args = (y, sr)
+            features = [getattr(self, f)(*args) for f in self.FEATURES]
 
             """
             WAV information retrieved from filename in order of `-` splits:
@@ -66,11 +63,7 @@ class RavdessParser(DatasetParser):
                 int(wav_parts[4]),
                 int(wav_parts[5]),
                 self.get_gender(wav_parts[6]),
-                self.mfcc(y, sr),
-                self.mel(y, sr),
-                self.rms(y),
-                self.spce(y, sr),
-                self.zcr(y),
+                *features,
                 self.EMOTIONS[wav_parts[2]]
             ])
 

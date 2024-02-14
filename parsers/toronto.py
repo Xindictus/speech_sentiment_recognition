@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import librosa
-import numpy as np
 import os
 import pandas as pd
 
@@ -11,13 +10,7 @@ from parsers.dataset_parser import DatasetParser
 class TorontoParser(DatasetParser):
     COLS = {
         'file': str,
-        'sample_rate': int,
-        'mfcc': np.array,
-        'mel': np.array,
-        'rms': np.array,
-        'spce': np.array,
-        'zcr': np.array,
-        'label': str,
+        'sample_rate': int
     }
 
     def label_handling(self, lb) -> str:
@@ -25,18 +18,19 @@ class TorontoParser(DatasetParser):
 
     def extract_features(self) -> None:
         data = []
+        self.finalize_col_labels()
 
         for wav in self.wavList:
             label = os.path.basename(wav).split('_')[2].split('.')[0]
             y, sr = librosa.load(wav)
+
+            args = (y, sr)
+            features = [getattr(self, f)(*args) for f in self.FEATURES]
+
             data.append([
                 wav,
                 sr,
-                self.mfcc(y, sr),
-                self.mel(y, sr),
-                self.rms(y),
-                self.spce(y, sr),
-                self.zcr(y),
+                *features,
                 self.label_handling(label)
             ])
 

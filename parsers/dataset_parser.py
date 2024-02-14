@@ -67,6 +67,12 @@ class DatasetParser(ABC):
         """
         return exists(path)
 
+    def finalize_col_labels(self):
+        for f in self.FEATURES:
+            self.COLS[f] = np.array
+
+        self.COLS['label'] = str
+
     def noise(y):
         noise_amp = 0.035 * np.random.uniform() * np.amax(y)
         return (y + noise_amp*np.random.normal(size=y.shape[0]))
@@ -74,7 +80,7 @@ class DatasetParser(ABC):
     ######################################
     #              Features              #
     ######################################
-    def cens(self, y, sr) -> np.array:
+    def cens(self, y, sr=None) -> np.array:
         """_summary_
 
         Constant-Q chromagram.
@@ -88,7 +94,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.chroma_cens(y=y, sr=sr).T, axis=0)
 
-    def cqt(self, y, sr) -> np.array:
+    def cqt(self, y, sr=None) -> np.array:
         """_summary_
 
         Constant-Q chromagram.
@@ -102,7 +108,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.chroma_cqt(y=y, sr=sr).T, axis=0)
 
-    def chroma_stft(self, y, sr) -> np.array:
+    def chroma_stft(self, y, sr=None) -> np.array:
         """_summary_
 
         Compute a chromagram from a waveform or power spectrogram.
@@ -120,7 +126,7 @@ class DatasetParser(ABC):
         stft = np.abs(librosa.stft(y))
         return np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
 
-    def mfcc(self, y, sr) -> np.array:
+    def mfcc(self, y, sr=None) -> np.array:
         """_summary_
         Mel-frequency cepstral coefficients (MFCCs)
 
@@ -133,7 +139,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13).T, axis=0)
 
-    def mel(self, y, sr) -> np.array:
+    def mel(self, y, sr=None) -> np.array:
         """_summary_
 
         Compute a mel-scaled spectrogram.
@@ -147,7 +153,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
 
-    def pitch(self, y, sr) -> np.array:
+    def pitch(self, y, sr=None) -> np.array:
         """_summary_
 
         Pitch tracking on thresholded parabolically-interpolated STFT.
@@ -162,7 +168,7 @@ class DatasetParser(ABC):
         pitches, _ = librosa.piptrack(y=y, sr=sr)
         return np.mean(pitches[pitches > 0])
 
-    def rms(self, y) -> np.array:
+    def rms(self, y, sr=None) -> np.array:
         """_summary_
 
         Compute root-mean-square (RMS) value for each frame,
@@ -176,7 +182,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.rms(y=y).T, axis=0)
 
-    def spce(self, y, sr) -> np.array:
+    def spce(self, y, sr=None) -> np.array:
         """_summary_
 
         Compute the spectral centroid.
@@ -194,7 +200,7 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
 
-    def stft(self, y) -> np.array:
+    def stft(self, y, sr=None) -> np.array:
         """_summary_
         Short-time Fourier transform (STFT).
 
@@ -215,7 +221,7 @@ class DatasetParser(ABC):
             window='hann'
         )).T, axis=0)
 
-    def zcr(self, y) -> np.array:
+    def zcr(self, y, sr=None) -> np.array:
         """_summary_
         Compute the zero-crossing rate of an audio time series.
 
