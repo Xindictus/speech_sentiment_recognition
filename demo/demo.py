@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import os
 import pickle
+import seaborn as sns
 
 from joblib import load
 from sklearn.metrics import (
@@ -16,6 +19,23 @@ from sklearn.preprocessing import LabelEncoder
 
 # Define PY script folder
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+
+
+def plot_cm(cm, labels, model):
+    # Create a heatmap
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, square=True,
+                xticklabels=np.unique(labels), yticklabels=np.unique(labels))
+
+    # Labels, title, and ticks
+    ax.set_xlabel('Predicted labels')
+    ax.set_ylabel('True labels')
+    ax.set_title(f'Confusion Matrix {model}')
+    ax.xaxis.set_ticklabels(np.unique(labels))
+    ax.xaxis.set_tick_params(rotation=45)
+    ax.yaxis.set_ticklabels(np.unique(labels))
+    ax.yaxis.set_tick_params(rotation=0)
+    plt.show()
 
 
 def get_test_dataset() -> dict:
@@ -59,7 +79,7 @@ def main():
     svm_model = load(f'{CURRENT_DIR}/../models/svm.joblib')
     knn_model = load(f'{CURRENT_DIR}/../models/knn.joblib')
 
-    X, y, _ = get_test_dataset()
+    X, y, labels = get_test_dataset()
 
     y_pred_svm = svm_model.predict(X)
     y_pred_knn = knn_model.predict(X)
@@ -86,6 +106,12 @@ def main():
     demo_logger.info(f'F1 KNN: {f1_knn:0.3f}')
     demo_logger.info(f'Matthews Correlation Coefficient SVM: {matthews_svm:0.3f}')
     demo_logger.info(f'Matthews Correlation Coefficient KNN: {matthews_knn:0.3f}')
+
+    cm_svm = confusion_matrix(y, y_pred_svm)
+    plot_cm(cm_svm, labels, '(SVM)')
+
+    cm_knn = confusion_matrix(y, y_pred_knn)
+    plot_cm(cm_knn, labels, '(KNN)')
 
 
 if __name__ == '__main__':
