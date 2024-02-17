@@ -156,11 +156,11 @@ def main():
     f1 = f1_score(y_test, y_pred, average='macro')
     matthews = matthews_corrcoef(y_test, y_pred)
 
-    print(f'Accuracy: {accuracy:0.3f}')
-    print(f'precision: {precision:0.3f}')
-    print(f'recall: {recall:0.3f}')
-    print(f'f1: {f1:0.3f}')
-    print(f'Matthews Correlation Coefficient: {matthews:0.3f}')
+    knn_logger.info(f'Accuracy: {accuracy:0.3f}')
+    knn_logger.info(f'precision: {precision:0.3f}')
+    knn_logger.info(f'recall: {recall:0.3f}')
+    knn_logger.info(f'f1: {f1:0.3f}')
+    knn_logger.info(f'Matthews Correlation Coefficient: {matthews:0.3f}')
 
     cm = confusion_matrix(y_test, y_pred)
     plot_cm(cm, labels)
