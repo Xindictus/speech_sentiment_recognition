@@ -78,7 +78,7 @@ class DatasetParser(ABC):
 
     def noise(y):
         noise_amp = 0.035 * np.random.uniform() * np.amax(y)
-        return (y + noise_amp*np.random.normal(size=y.shape[0]))
+        return (y + noise_amp * np.random.normal(size=y.shape[0]))
 
     ######################################
     #              Features              #
