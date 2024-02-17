@@ -13,6 +13,9 @@ class TorontoParser(DatasetParser):
         'sample_rate': int
     }
 
+    def src(self) -> str:
+        return 'toronto'
+
     def label_handling(self, lb) -> str:
         return 'pleasant_surprise' if lb == 'ps' else lb
 
