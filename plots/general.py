@@ -48,7 +48,7 @@ def scatter_plot(df):
         ax.legend()
         ax.grid(True)
 
-        plt.savefig(f'{curr_col}-{next_col}.png')
+        plt.savefig(f'{CURRENT_DIR}/scatters/{curr_col}-{next_col}.png')
 
 
 def label_dist(df):
@@ -67,7 +67,7 @@ def main():
     dataset = f'{CURRENT_DIR}/../parsers/datasets/train.csv'
     df = pd.read_csv(dataset)
 
-    # label_dist(df)
+    label_dist(df)
 
     scatter_plot(df)
 
