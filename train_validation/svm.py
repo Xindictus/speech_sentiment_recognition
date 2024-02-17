@@ -119,7 +119,6 @@ def main():
     svm = SVC(
         kernel='rbf',
         gamma='auto',
-        decision_function_shape='ovo',
         probability=True,
         random_state=42,
         cache_size=600
