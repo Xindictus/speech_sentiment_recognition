@@ -7,7 +7,7 @@ import pandas as pd
 import pickle
 import seaborn as sns
 
-from matplotlib.cm import get_cmap
+# from matplotlib.colormaps import get_cmap
 from sklearn.metrics import (
     accuracy_score, auc,
     confusion_matrix, f1_score,
@@ -77,7 +77,7 @@ def plot_roc(y, y_test, y_score, labels):
 
     # Colors for the ROC curves
     # Choose a colormap
-    colormap = get_cmap('tab20')
+    colormap = plt.get_cmap('tab20')
 
     # Generate colors from the colormap
     colors = [colormap(i / n_classes) for i in range(n_classes)]
