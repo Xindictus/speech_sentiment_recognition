@@ -304,6 +304,8 @@ class DatasetParser(ABC):
             librosa.display.waveshow(data, sr=sample_rate)
         plt.savefig(path)
 
+        return self
+
     ######################################
     #             DF Handling            #
     ######################################

@@ -1,32 +1,31 @@
 import numpy as np
-
-np.random.seed(1)
-
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score,confusion_matrix,precision_score,recall_score,cohen_kappa_score,f1_score,roc_curve,roc_auc_score
 
-# Generate
-array = np.random.random((100, 20))
+data_path = (r'C:\Users\mihal\speech_sentiment_recognition\parsers\datasets\train.csv')
+train_data = pd.read_csv(data_path)
 
-df = pd.DataFrame(array)
+# Initialize LabelEncoder
+label_encoder = LabelEncoder()
 
-# Rename columns
-column_names = {i: f"feature {i+1}" for i in range(19)}
-column_names[19] = "y"
-df.rename(columns=column_names, inplace=True)
+# Fit LabelEncoder and transform the 'y' column
+train_data['label'] = label_encoder.fit_transform(train_data['label'])
 
-# Class labels
-class_labels = np.random.randint(0, 8, size=(100,))
-df['y'] = class_labels
-print(df)
+# # Create a mapping between class labels and numerical representations
+# class_mapping = dict(zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_)))
+# print("Mapping between class labels and numerical representations:")
+# for class_label, numerical_value in class_mapping.items():
+#     print(f"{class_label} -> {numerical_value}")
+
+
 # Splitting
-X = df.drop('y', axis=1)
-y = df['y']
+X = train_data.drop('label', axis=1)
+y = train_data['label']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 
@@ -88,7 +87,6 @@ print("ROC-AUC Score (macro):", roc_auc_macro)
 
 # Generate confusion matrix
 conf_matrix = confusion_matrix(y_test, y_pred)
-print("Confusion Matrix:")
 
 plt.figure(figsize=(8, 6))
 plt.imshow(conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
