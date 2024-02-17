@@ -23,18 +23,32 @@ def get_color(lbl):
     }[lbl]
 
 
-def scatter_plot(self, cols):
-    fig, ax = plt.subplots()
-    for label in self.df['label'].unique():
-        color = self.get_color(label)
-        tmp = self.df[self.df['label'] == label]
-        ax.scatter(tmp[cols[0]], tmp[cols[1]], color=color, label=label)
-        del tmp
+def scatter_plot(df):
 
-    ax.legend()
-    ax.grid(True)
+    for i in range(len(df.columns) - 2):
+        fig, ax = plt.subplots()
 
-    plt.show()
+        curr_col = df.columns[i]
+        next_col = df.columns[i + 1]
+
+        # Accessing the data for the current and next column
+        current_data = df[curr_col]
+        next_data = df[next_col]
+
+        print(f"Pair: ({curr_col}, {next_col})")
+
+        for label in df['label'].unique():
+            color = get_color(label)
+            tmp = df[df['label'] == label]
+            ax.scatter(tmp[curr_col], tmp[next_col], color=color, label=label)
+            del tmp
+
+        ax.set_xlabel(curr_col)
+        ax.set_ylabel(next_col)
+        ax.legend()
+        ax.grid(True)
+
+        plt.savefig(f'{curr_col}-{next_col}.png')
 
 
 def label_dist(df):
@@ -53,9 +67,9 @@ def main():
     dataset = f'{CURRENT_DIR}/../parsers/datasets/train.csv'
     df = pd.read_csv(dataset)
 
-    label_dist(df)
+    # label_dist(df)
 
-    waveplots(df)
+    scatter_plot(df)
 
 
 if __name__ == '__main__':

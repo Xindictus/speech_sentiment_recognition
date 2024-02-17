@@ -44,10 +44,12 @@ def main():
     toronto_export = f'{CURRENT_DIR}/datasets/toronto.csv'
     toronto_features = f'{CURRENT_DIR}/datasets/toronto_features.csv'
     toronto_dist = f'{CURRENT_DIR}/../plots/toronto_waveplots.png'
+    toronto_spec = f'{CURRENT_DIR}/../plots/toronto_spectrograms.png'
     toronto \
         .parse() \
         .extract_features() \
         .waveplots(toronto_dist) \
+        .spectrograms(toronto_spec) \
         .post_processing() \
         .export(toronto_export, 'dataset') \
         .export(toronto_features)
@@ -63,10 +65,12 @@ def main():
     ravdess_export = f'{CURRENT_DIR}/datasets/ravdess.csv'
     ravdess_features = f'{CURRENT_DIR}/datasets/ravdess_features.csv'
     ravdess_dist = f'{CURRENT_DIR}/../plots/ravdess_waveplots.png'
+    ravdess_spec = f'{CURRENT_DIR}/../plots/ravdess_spectrograms.png'
     ravdess \
         .parse() \
         .extract_features() \
         .waveplots(ravdess_dist) \
+        .spectrograms(ravdess_spec) \
         .post_processing() \
         .export(ravdess_export, 'dataset') \
         .export(ravdess_features)

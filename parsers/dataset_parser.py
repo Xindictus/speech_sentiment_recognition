@@ -290,6 +290,44 @@ class DatasetParser(ABC):
         return self
 
     ######################################
+    #            Spectrograms            #
+    ######################################
+    def spectrograms(self, path):
+        base_filenm = path[:-4]
+
+        for f in ['chroma', 'mel']:
+            path = base_filenm + f'_{f}.png'
+            fig = plt.figure(figsize=(15, 15))
+            fig.subplots_adjust(hspace=0.4, wspace=0.4)
+
+            for i, label in enumerate(self.df['label'].unique()):
+                fn = self.df[self.df['label'] == label]
+                fig.add_subplot(5, 2, i + 1)
+                plt.title(label)
+                y, sr = librosa.load(fn.iloc[0]['file'])
+
+                if f == 'chroma':
+                    feats = librosa.feature.chroma_stft(y=y, sr=sr)
+                elif f == 'mel':
+                    feats = librosa.feature.melspectrogram(
+                        y=y,
+                        sr=sr,
+                        n_mels=128,
+                        fmax=8000
+                    )
+
+                S_dB = librosa.power_to_db(feats, ref=np.max)
+                librosa.display.specshow(
+                    S_dB,
+                    x_axis='time',
+                    y_axis='chroma',
+                    sr=sr
+                )
+            plt.savefig(path)
+
+        return self
+
+    ######################################
     #             Wave Plots             #
     ######################################
     def waveplots(self, path):

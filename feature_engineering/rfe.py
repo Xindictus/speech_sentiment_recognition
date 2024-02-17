@@ -35,26 +35,31 @@ def get_dataset() -> dict:
 def get_model_results(X, y) -> dict:
     models = dict()
 
-    for selected_features in range(5, X.shape[1] + 1, 5):
+    for n_features_to_select in range(5, X.shape[1] + 1, 5):
+        # if n_features_to_select != 125:
+        #     continue
         model = SVC(kernel="linear")
         rfe = RFE(
             estimator=model,
-            n_features_to_select=selected_features,
+            n_features_to_select=n_features_to_select,
             step=1
         )
         rfe = rfe.fit(X, y)
 
-        models[str(selected_features)] = Pipeline(steps=[
+        models[str(n_features_to_select)] = Pipeline(steps=[
             ('s', rfe),
             ('m', model)
         ])
 
         # We have chosen 125 as the best number of features
         # to train with
-        if selected_features == 125:
-            feature_selected = rfe.support_
+        if n_features_to_select == 125:
+            features_selected = rfe.support_
 
-            labels = [l for l, selected in zip(X.columns, feature_selected) if selected]
+            labels = [lab for lab, selected in zip(
+                X.columns,
+                features_selected) if selected]
+
             with open(f'{CURRENT_DIR}/selected_features.pickle', 'wb') as file:
                 pickle.dump(labels, file)
 
