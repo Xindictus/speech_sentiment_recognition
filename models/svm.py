@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
 import pickle
 import seaborn as sns
+import time
 
-# from matplotlib.colormaps import get_cmap
+from joblib import dump
 from sklearn.metrics import (
     accuracy_score, auc,
     confusion_matrix, f1_score,
@@ -106,6 +108,18 @@ def plot_roc(y, y_test, y_score, labels):
 
 
 def main():
+    # Define custom logger
+    svm_logger = logging.getLogger('svm_logger')
+    svm_logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        logging.Formatter(
+            '%(asctime)s %(levelname)8s %(process)7d > %(message)s',
+            '%Y-%m-%d %H:%M:%S'
+        )
+    )
+    svm_logger.addHandler(handler)
+
     X, y, labels = get_dataset()
 
     # breakdown to train/validation
@@ -116,6 +130,8 @@ def main():
         random_state=42
     )
 
+    start = time.time()
+
     svm = SVC(
         kernel='rbf',
         gamma='auto',
@@ -124,9 +140,16 @@ def main():
         cache_size=600
     )
 
-    fit = svm.fit(X_train, y_train)
-    y_score = fit.decision_function(X_test)
+    fitted = svm.fit(X_train, y_train)
+
+    end = time.time()
+    svm_logger.info(f'SVM model trained in: {(end - start):0.2f}s')
+
+    y_score = fitted.decision_function(X_test)
     y_pred = svm.predict(X_test)
+
+    # Save SVM trained model
+    dump(svm, f'{CURRENT_DIR}/svm.joblib')
 
     # METRICS
     accuracy = accuracy_score(y_test, y_pred)
@@ -135,11 +158,11 @@ def main():
     f1 = f1_score(y_test, y_pred, average='macro')
     matthews = matthews_corrcoef(y_test, y_pred)
 
-    print(f'Accuracy: {accuracy:0.3f}')
-    print(f'precision: {precision:0.3f}')
-    print(f'recall: {recall:0.3f}')
-    print(f'f1: {f1:0.3f}')
-    print(f'Matthews Correlation Coefficient: {matthews:0.3f}')
+    svm_logger.info(f'Accuracy: {accuracy:0.3f}')
+    svm_logger.info(f'Precision: {precision:0.3f}')
+    svm_logger.info(f'Recall: {recall:0.3f}')
+    svm_logger.info(f'F1: {f1:0.3f}')
+    svm_logger.info(f'Matthews Correlation Coefficient: {matthews:0.3f}')
 
     cm = confusion_matrix(y_test, y_pred)
     plot_cm(cm, y_test, labels)
