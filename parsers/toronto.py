@@ -10,7 +10,8 @@ from parsers.dataset_parser import DatasetParser
 class TorontoParser(DatasetParser):
     COLS = {
         'file': str,
-        'sample_rate': int
+        'sample_rate': int,
+        'age': str
     }
 
     def src(self) -> str:
@@ -18,6 +19,10 @@ class TorontoParser(DatasetParser):
 
     def label_handling(self, lb) -> str:
         return 'pleasant_surprise' if lb == 'ps' else lb
+
+    def post_process_extras(self):
+        self.features['age'] = self.df['age']
+        return self
 
     def extract_features(self) -> None:
         data = []
@@ -33,6 +38,7 @@ class TorontoParser(DatasetParser):
             data.append([
                 wav,
                 sr,
+                os.path.basename(wav)[0],
                 *features,
                 self.label_handling(label)
             ])

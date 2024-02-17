@@ -51,6 +51,7 @@ def main():
         .waveplots(toronto_dist) \
         .spectrograms(toronto_spec) \
         .post_processing() \
+        .post_process_extras() \
         .export(toronto_export, 'dataset') \
         .export(toronto_features)
 
@@ -72,6 +73,7 @@ def main():
         .waveplots(ravdess_dist) \
         .spectrograms(ravdess_spec) \
         .post_processing() \
+        .post_process_extras() \
         .export(ravdess_export, 'dataset') \
         .export(ravdess_features)
 
@@ -102,14 +104,22 @@ def main():
     parser_logger.info('Spliting to train/test set')
 
     # Sample datasets and create training set
-    toronto_sampled = sample_half(toronto_df)
-    ravdess_sampled = sample_half(ravdess_df)
+    toronto_sampled = toronto_df[toronto_df['age'] == 'Y']
+    toronto_sampled = toronto_sampled.drop(columns=['age'])
+
+    ravdess_sampled = ravdess_df[ravdess_df['actor'] < 20]
+    ravdess_sampled = ravdess_sampled.drop(columns=['actor'])
+
     training_df = pd.concat([toronto_sampled, ravdess_sampled])
     train_csv_path = f'{CURRENT_DIR}/datasets/train.csv'
 
     # Create test set with the rest
-    toronto_rest = toronto_df.drop(toronto_sampled.index)
-    ravdess_rest = ravdess_df.drop(ravdess_sampled.index)
+    toronto_rest = toronto_df[toronto_df['age'] == 'O']
+    toronto_rest = toronto_rest.drop(columns=['age'])
+
+    ravdess_rest = ravdess_df[ravdess_df['actor'] >= 20]
+    ravdess_rest = ravdess_rest.drop(columns=['actor'])
+
     test_df = pd.concat([toronto_rest, ravdess_rest])
     test_csv_path = f'{CURRENT_DIR}/datasets/test.csv'
 

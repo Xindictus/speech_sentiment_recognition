@@ -254,6 +254,10 @@ class DatasetParser(ABC):
     def flatten(self, xss):
         return [x for xs in xss for x in xs]
 
+    @abstractmethod
+    def post_process_extras(self):
+        raise NotImplementedError()
+
     def post_processing(self):
         self.padding()
 
