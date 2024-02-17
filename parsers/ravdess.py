@@ -27,7 +27,8 @@ class RavdessParser(DatasetParser):
         'emotional intensity': int,
         'statement': int,
         'repetition': int,
-        'gender': str
+        'gender': str,
+        'actor': str
     }
 
     def src(self) -> str:
@@ -35,6 +36,10 @@ class RavdessParser(DatasetParser):
 
     def get_gender(self, val):
         return 'male' if int(val) % 2 == 1 else 'female'
+
+    def post_process_extras(self):
+        self.features['actor'] = self.df['actor']
+        return self
 
     def extract_features(self) -> None:
         data = []
@@ -66,6 +71,7 @@ class RavdessParser(DatasetParser):
                 int(wav_parts[4]),
                 int(wav_parts[5]),
                 self.get_gender(wav_parts[6]),
+                f'{int(wav_parts[6])}',
                 *features,
                 self.EMOTIONS[wav_parts[2]]
             ])
