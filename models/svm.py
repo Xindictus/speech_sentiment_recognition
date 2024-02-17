@@ -48,7 +48,7 @@ def get_dataset() -> dict:
     return (X, y, labels)
 
 
-def plot_cm(cm, y_test, labels):
+def plot_cm(cm, labels):
     # Create a heatmap
     fig, ax = plt.subplots(figsize=(10, 10))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, square=True,
@@ -165,7 +165,7 @@ def main():
     svm_logger.info(f'Matthews Correlation Coefficient: {matthews:0.3f}')
 
     cm = confusion_matrix(y_test, y_pred)
-    plot_cm(cm, y_test, labels)
+    plot_cm(cm, labels)
 
     plot_roc(y, y_test, y_score, np.unique(labels))
 
