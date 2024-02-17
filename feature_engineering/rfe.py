@@ -36,8 +36,9 @@ def get_model_results(X, y) -> dict:
     models = dict()
 
     for n_features_to_select in range(5, X.shape[1] + 1, 5):
-        # if n_features_to_select != 125:
-        #     continue
+        selected = 80
+        if n_features_to_select != selected:
+            continue
         model = SVC(
             kernel='linear',
             random_state=42,
@@ -55,17 +56,17 @@ def get_model_results(X, y) -> dict:
             ('m', model)
         ])
 
-        # We have chosen 125 as the best number of features
-        # to train with
-        # if n_features_to_select == 125:
-        #     features_selected = rfe.support_
+        # We have chosen X as the best number of features
+        # to train with based on average accuracy and std
+        if n_features_to_select == selected:
+            features_selected = rfe.support_
 
-        #     labels = [lab for lab, selected in zip(
-        #         X.columns,
-        #         features_selected) if selected]
+            labels = [lab for lab, selected in zip(
+                X.columns,
+                features_selected) if selected]
 
-        #     with open(f'{CURRENT_DIR}/selected_features.pickle', 'wb') as file:
-        #         pickle.dump(labels, file)
+            with open(f'{CURRENT_DIR}/selected_features.pickle', 'wb') as file:
+                pickle.dump(labels, file)
 
     return models
 
