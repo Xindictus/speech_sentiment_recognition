@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import seaborn as sns
 
 from abc import ABC, abstractmethod
 from os.path import exists
@@ -54,6 +53,10 @@ class DatasetParser(ABC):
         the Kaggle audio files and creating a dataset
         out of them
         """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def src(self) -> None:
         raise NotImplementedError()
 
     def _is_valid_path(self, path: str) -> bool:
@@ -137,7 +140,7 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13).T, axis=0)
+        return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20).T, axis=0)
 
     def mel(self, y, sr=None) -> np.array:
         """_summary_
@@ -287,54 +290,59 @@ class DatasetParser(ABC):
         return self
 
     ######################################
-    #              Plotting              #
+    #            Spectrograms            #
     ######################################
-    def waveplots(self):
+    def spectrograms(self, path):
+        base_filenm = path[:-4]
+
+        for f in ['chroma', 'mel']:
+            path = base_filenm + f'_{f}.png'
+            fig = plt.figure(figsize=(15, 15))
+            fig.subplots_adjust(hspace=0.4, wspace=0.4)
+
+            for i, label in enumerate(self.df['label'].unique()):
+                fn = self.df[self.df['label'] == label]
+                fig.add_subplot(5, 2, i + 1)
+                plt.title(label)
+                y, sr = librosa.load(fn.iloc[0]['file'])
+
+                if f == 'chroma':
+                    feats = librosa.feature.chroma_stft(y=y, sr=sr)
+                elif f == 'mel':
+                    feats = librosa.feature.melspectrogram(
+                        y=y,
+                        sr=sr,
+                        n_mels=128,
+                        fmax=8000
+                    )
+
+                S_dB = librosa.power_to_db(feats, ref=np.max)
+                librosa.display.specshow(
+                    S_dB,
+                    x_axis='time',
+                    y_axis='chroma',
+                    sr=sr
+                )
+            plt.savefig(path)
+
+        return self
+
+    ######################################
+    #             Wave Plots             #
+    ######################################
+    def waveplots(self, path):
         fig = plt.figure(figsize=(15, 15))
         fig.subplots_adjust(hspace=0.4, wspace=0.4)
 
         for i, label in enumerate(self.df['label'].unique()):
-            fn = self.df.loc[self.df['label'] == label]
+            fn = self.df[self.df['label'] == label]
             fig.add_subplot(5, 2, i + 1)
             plt.title(label)
-            data, sample_rate = librosa.load(fn)
-            librosa.display.waveplot(data, sr=sample_rate)
-        plt.savefig('class_examples.png')
+            data, sample_rate = librosa.load(fn.iloc[0]['file'])
+            librosa.display.waveshow(data, sr=sample_rate)
+        plt.savefig(path)
 
-    def get_color(self, lbl):
-        return {
-            'fear': 'red',
-            'disgust': 'blue',
-            'pleasant_surprise': 'green',
-            'sad': 'yellow',
-            'angry': 'purple',
-            'neutral': 'orange',
-            'happy': 'pink'
-        }[lbl]
-
-    def scatter_plot(self, cols):
-        fig, ax = plt.subplots()
-        for label in self.df['label'].unique():
-            color = self.get_color(label)
-            tmp = self.df[self.df['label'] == label]
-            ax.scatter(tmp[cols[0]], tmp[cols[1]], color=color, label=label)
-            del tmp
-
-        ax.legend()
-        ax.grid(True)
-
-        plt.show()
-
-    def label_dist(self):
-        sns.countplot(
-            x='label',
-            data=self.df,
-            order=self.df['label'].value_counts().index
-        )
-        plt.title('Count of Each Label')
-        plt.xlabel('Label')
-        plt.ylabel('Count')
-        plt.show()
+        return self
 
     ######################################
     #             DF Handling            #
