@@ -11,7 +11,8 @@ class TorontoParser(DatasetParser):
     COLS = {
         'file': str,
         'sample_rate': int,
-        'age': str
+        'age': str,
+        'type': str
     }
 
     def src(self) -> str:
@@ -22,6 +23,7 @@ class TorontoParser(DatasetParser):
 
     def post_process_extras(self):
         self.features['age'] = self.df['age']
+        self.features['type'] = self.df['type']
         return self
 
     def extract_features(self) -> None:
@@ -35,13 +37,36 @@ class TorontoParser(DatasetParser):
             args = (y, sr)
             features = [getattr(self, f)(*args) for f in self.FEATURES]
 
-            data.append([
+            y_noise = self.noise(y)
+            args_noise = (y_noise, sr)
+            features_noise = [getattr(self, f)(*args_noise) for f in self.FEATURES]
+
+            y_stretch = self.stretch(y)
+            args_stretch = (y_stretch, sr)
+            features_stretch = [getattr(self, f)(*args_stretch) for f in self.FEATURES]
+
+            data.extend([[
                 wav,
                 sr,
                 os.path.basename(wav)[0],
+                'original',
                 *features,
+                self.label_handling(label),
+            ], [
+                wav,
+                sr,
+                os.path.basename(wav)[0],
+                'noise',
+                *features_noise,
                 self.label_handling(label)
-            ])
+            ], [
+                wav,
+                sr,
+                os.path.basename(wav)[0],
+                'stretch',
+                *features_stretch,
+                self.label_handling(label)
+            ]])
 
         self.df = pd.DataFrame(data, columns=self.COLS)
 

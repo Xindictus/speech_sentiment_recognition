@@ -12,11 +12,15 @@ from parsers.toronto import TorontoParser
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Required for merging the datasets
-SPLIT_RATIO = 0.7
+SPLIT_RATIO = 0.1
 
 
-def sample_half(df):
-    return df.groupby('label').sample(frac=SPLIT_RATIO, random_state=42)
+def sample_sentiments(df, ratio=None):
+    frac = ratio if ratio is not None else SPLIT_RATIO
+    return df.groupby(['label', 'type']).sample(
+        frac=frac,
+        random_state=42
+    )
 
 
 def main():
@@ -91,7 +95,6 @@ def main():
     # Keeping similar sentiments
     sentiments = [
         'angry',
-        'disgust',
         'fear',
         'happy',
         'neutral',
@@ -105,20 +108,41 @@ def main():
 
     # Sample datasets and create training set
     toronto_sampled = toronto_df[toronto_df['age'] == 'Y']
-    toronto_sampled = toronto_sampled.drop(columns=['age'])
+    # keep ratios per actor
+    toronto_sampled = sample_sentiments(toronto_sampled, 0.1)
+    toronto_sampled = toronto_sampled.drop(columns=[
+        'age',
+        'type'
+    ])
 
-    ravdess_sampled = ravdess_df[ravdess_df['actor'] < 20]
-    ravdess_sampled = ravdess_sampled.drop(columns=['actor'])
+    ravdess_sampled = ravdess_df[ravdess_df['actor'] <= 20]
+    ravdess_sampled = ravdess_sampled.drop(columns=[
+        'actor',
+        'gender',
+        'type'
+    ])
 
     training_df = pd.concat([toronto_sampled, ravdess_sampled])
     train_csv_path = f'{CURRENT_DIR}/datasets/train.csv'
 
-    # Create test set with the rest
-    toronto_rest = toronto_df[toronto_df['age'] == 'O']
-    toronto_rest = toronto_rest.drop(columns=['age'])
+    # Create test set with remaining original
+    toronto_rest = toronto_df[(toronto_df['age'] == 'O') &
+                              (toronto_df['type'] == 'original')]
+    # keep ratios per actor
+    toronto_rest = sample_sentiments(toronto_rest, 0.03)
+    toronto_rest = toronto_rest.drop(columns=[
+        'age',
+        'type'
+    ])
 
-    ravdess_rest = ravdess_df[ravdess_df['actor'] >= 20]
-    ravdess_rest = ravdess_rest.drop(columns=['actor'])
+    ravdess_rest = ravdess_df[(ravdess_df['actor'] > 20) &
+                              (ravdess_df['gender'] == 'F') &
+                              (ravdess_df['type'] == 'original')]
+    ravdess_rest = ravdess_rest.drop(columns=[
+        'actor',
+        'gender',
+        'type'
+    ])
 
     test_df = pd.concat([toronto_rest, ravdess_rest])
     test_csv_path = f'{CURRENT_DIR}/datasets/test.csv'

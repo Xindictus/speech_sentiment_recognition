@@ -28,17 +28,20 @@ class RavdessParser(DatasetParser):
         'statement': int,
         'repetition': int,
         'gender': str,
-        'actor': str
+        'actor': str,
+        'type': str
     }
 
     def src(self) -> str:
         return 'ravdess'
 
     def get_gender(self, val):
-        return 'male' if int(val) % 2 == 1 else 'female'
+        return 'M' if int(val) % 2 == 1 else 'F'
 
     def post_process_extras(self):
         self.features['actor'] = self.df['actor']
+        self.features['gender'] = self.df['gender']
+        self.features['type'] = self.df['type']
         return self
 
     def extract_features(self) -> None:
@@ -52,6 +55,18 @@ class RavdessParser(DatasetParser):
             args = (y, sr)
             features = [getattr(self, f)(*args) for f in self.FEATURES]
 
+            y_noise = self.noise(y)
+            args_noise = (y_noise, sr)
+            features_noise = [getattr(self, f)(*args_noise) for f in self.FEATURES]
+
+            y_stretch = self.stretch(y)
+            args_stretch = (y_stretch, sr)
+            features_stretch = [getattr(self, f)(*args_stretch) for f in self.FEATURES]
+
+            # y_pitch_shift = self.pitch_shift(y, sr)
+            # args_pitch_shift = (y_pitch_shift, sr)
+            # features_pitch_shift = [getattr(self, f)(*args_pitch_shift) for f in self.FEATURES]
+
             """
             WAV information retrieved from filename in order of `-` splits:
                 - modality (wav_parts[0])
@@ -62,7 +77,7 @@ class RavdessParser(DatasetParser):
                 - repetition (wav_parts[5])
                 - male/female actor/actress (wav_parts[6])
             """
-            data.append([
+            data.extend([[
                 wav,
                 sr,
                 int(wav_parts[0]),
@@ -72,9 +87,49 @@ class RavdessParser(DatasetParser):
                 int(wav_parts[5]),
                 self.get_gender(wav_parts[6]),
                 f'{int(wav_parts[6])}',
+                'original',
                 *features,
                 self.EMOTIONS[wav_parts[2]]
-            ])
+            ], [
+                wav,
+                sr,
+                int(wav_parts[0]),
+                int(wav_parts[1]),
+                int(wav_parts[3]),
+                int(wav_parts[4]),
+                int(wav_parts[5]),
+                self.get_gender(wav_parts[6]),
+                f'{int(wav_parts[6])}',
+                'noise',
+                *features_noise,
+                self.EMOTIONS[wav_parts[2]]
+            ], [
+                wav,
+                sr,
+                int(wav_parts[0]),
+                int(wav_parts[1]),
+                int(wav_parts[3]),
+                int(wav_parts[4]),
+                int(wav_parts[5]),
+                self.get_gender(wav_parts[6]),
+                f'{int(wav_parts[6])}',
+                'stretch',
+                *features_stretch,
+                self.EMOTIONS[wav_parts[2]]
+            ]])
+            # , [
+            #     wav,
+            #     sr,
+            #     int(wav_parts[0]),
+            #     int(wav_parts[1]),
+            #     int(wav_parts[3]),
+            #     int(wav_parts[4]),
+            #     int(wav_parts[5]),
+            #     self.get_gender(wav_parts[6]),
+            #     f'{int(wav_parts[6])}',
+            #     *features_pitch_shift,
+            #     self.EMOTIONS[wav_parts[2]]
+            # ]
 
         self.df = pd.DataFrame(data, columns=self.COLS)
 

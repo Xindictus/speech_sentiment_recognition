@@ -15,16 +15,25 @@ from sklearn.preprocessing import StandardScaler
 class DatasetParser(ABC):
     FEATURES = [
         'mfcc',
+        # 'mfcc_std',
         'mel',
+        # 'pitch',
+        # 'mel_std',
         'rms',
+        # 'rms_std',
         'spce',
-        'zcr'
+        # 'spce_std',
+        'zcr',
+        # 'zcr_std'
     ]
 
     PADDABLE = [
         'mfcc',
+        'mfcc_std',
         'mel',
+        'mel_std',
         'rms',
+        'rms_std',
         'stft',
         'zcr'
     ]
@@ -76,9 +85,15 @@ class DatasetParser(ABC):
 
         self.COLS['label'] = str
 
-    def noise(y):
-        noise_amp = 0.035 * np.random.uniform() * np.amax(y)
+    def noise(self, y):
+        noise_amp = 0.010 * np.random.uniform() * np.amax(y)
         return (y + noise_amp * np.random.normal(size=y.shape[0]))
+
+    def stretch(self, y):
+        return librosa.effects.time_stretch(y=y, rate=0.85)
+
+    def pitch_shift(self, y, sr):
+        return librosa.effects.pitch_shift(y=y, sr=sr, n_steps=0.7)
 
     ######################################
     #              Features              #
@@ -140,7 +155,20 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20).T, axis=0)
+        return np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+
+    def mfcc_std(self, y, sr=None) -> np.array:
+        """_summary_
+        Mel-frequency cepstral coefficients (MFCCs)
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.std(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
 
     def mel(self, y, sr=None) -> np.array:
         """_summary_
@@ -154,7 +182,33 @@ class DatasetParser(ABC):
         Returns:
             np.array
         """
-        return np.mean(librosa.feature.melspectrogram(y=y, sr=sr).T, axis=0)
+        return np.mean(librosa.feature.melspectrogram(
+            y=y,
+            sr=sr,
+            n_mels=128,
+            n_fft=1024,
+            hop_length=512
+        ).T, axis=0)
+
+    def mel_std(self, y, sr=None) -> np.array:
+        """_summary_
+
+        Compute a mel-scaled spectrogram.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.std(librosa.feature.melspectrogram(
+            y=y,
+            sr=sr,
+            n_mels=128,
+            n_fft=1024,
+            hop_length=512
+        ).T, axis=0)
 
     def pitch(self, y, sr=None) -> np.array:
         """_summary_
@@ -185,6 +239,20 @@ class DatasetParser(ABC):
         """
         return np.mean(librosa.feature.rms(y=y).T, axis=0)
 
+    def rms_std(self, y, sr=None) -> np.array:
+        """_summary_
+
+        Compute root-mean-square (RMS) value for each frame,
+        either from the audio samples y or from a spectrogram S.
+
+        Args:
+            y: audio time series
+
+        Returns:
+            np.array
+        """
+        return np.std(librosa.feature.rms(y=y).T, axis=0)
+
     def spce(self, y, sr=None) -> np.array:
         """_summary_
 
@@ -202,6 +270,24 @@ class DatasetParser(ABC):
             np.array
         """
         return np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
+
+    def spce_std(self, y, sr=None) -> np.array:
+        """_summary_
+
+        Compute the spectral centroid.
+
+        Each frame of a magnitude spectrogram is normalized and
+        treated as a distribution over frequency bins, from which
+        the mean (centroid) is extracted per frame.
+
+        Args:
+            y: audio time series
+            sr: sample rate
+
+        Returns:
+            np.array
+        """
+        return np.std(librosa.feature.spectral_centroid(y=y, sr=sr))
 
     def stft(self, y, sr=None) -> np.array:
         """_summary_
@@ -223,6 +309,18 @@ class DatasetParser(ABC):
             hop_length=512,
             window='hann'
         )).T, axis=0)
+
+    def zcr_std(self, y, sr=None) -> np.array:
+        """_summary_
+        Compute the zero-crossing rate of an audio time series.
+
+        Args:
+            y: audio time series
+
+        Returns:
+            np.array
+        """
+        return np.std(librosa.feature.zero_crossing_rate(y=y).T, axis=0)
 
     def zcr(self, y, sr=None) -> np.array:
         """_summary_

@@ -36,7 +36,7 @@ def get_dataset() -> dict:
     y = label_encoder.fit_transform(labels)
 
     pickle_feat_path = \
-        f'{CURRENT_DIR}/../feature_engineering/selected_features.pickle'
+        f'{CURRENT_DIR}/../feature_engineering/selected_features_rfc.pickle'
 
     with open(pickle_feat_path, 'rb') as file:
         # Load the array from the pickle file
@@ -122,6 +122,8 @@ def main():
 
     X, y, labels = get_dataset()
 
+    print(X.shape)
+
     # breakdown to train/validation
     X_train, X_test, y_train, y_test = train_test_split(
         X,
@@ -132,12 +134,15 @@ def main():
 
     start = time.time()
 
+    C = 3
+    gamma = 0.01
     svm = SVC(
+        C=C,
         kernel='rbf',
-        gamma='auto',
+        gamma=gamma,
         probability=True,
         random_state=42,
-        cache_size=600
+        cache_size=800
     )
 
     fitted = svm.fit(X_train, y_train)
@@ -158,6 +163,8 @@ def main():
     f1 = f1_score(y_test, y_pred, average='macro')
     matthews = matthews_corrcoef(y_test, y_pred)
 
+    svm_logger.info(f'C: {C}')
+    svm_logger.info(f'Gamma: {gamma}')
     svm_logger.info(f'Accuracy: {accuracy:0.3f}')
     svm_logger.info(f'Precision: {precision:0.3f}')
     svm_logger.info(f'Recall: {recall:0.3f}')

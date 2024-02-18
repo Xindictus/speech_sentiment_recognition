@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -24,6 +25,10 @@ from sklearn.preprocessing import label_binarize, LabelEncoder
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
+def get_neighbors(number):
+    return round(math.sqrt(number))
+
+
 def get_dataset() -> dict:
     dataset = f'{CURRENT_DIR}/../parsers/datasets/train.csv'
     df = pd.read_csv(dataset)
@@ -36,7 +41,7 @@ def get_dataset() -> dict:
     y = label_encoder.fit_transform(labels)
 
     pickle_feat_path = \
-        f'{CURRENT_DIR}/../feature_engineering/selected_features.pickle'
+        f'{CURRENT_DIR}/../feature_engineering/selected_features_rfc.pickle'
 
     with open(pickle_feat_path, 'rb') as file:
         # Load the array from the pickle file
@@ -133,9 +138,8 @@ def main():
     start = time.time()
 
     knn = KNeighborsClassifier(
-        n_neighbors=11,
-        p=7,
-        metric='euclidean'
+        n_neighbors=get_neighbors(X.shape[1]),
+        p=1,
     )
 
     knn.fit(X_train, y_train)

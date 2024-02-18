@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import os
 import time
+import pickle
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -27,8 +29,6 @@ def get_color(lbl):
 
 
 def scatter_plot(df, f1, f2):
-    print(f1)
-    print(f2)
     fig, ax = plt.subplots()
     for label in df['label'].unique():
         color = get_color(label)
@@ -69,13 +69,12 @@ def main():
 
     # Accuracy
     y_pred = clf.predict(X_test)
-    print("Accuracy: ", accuracy_score(y_test, y_pred))
+    print(f'Accuracy: {accuracy_score(y_test, y_pred):0.3f}')
 
     # Compute importances
     start = time.time()
 
     importances = clf.feature_importances_
-    # std = np.std([tree.feature_importances_ for tree in clf.estimators_], axis=0)
 
     end = time.time()
     print(f"Elapsed time to compute the importances: {(end - start):0.2f}s")
@@ -86,7 +85,13 @@ def main():
         'Importance': importances
     }).sort_values(by='Importance', ascending=False)
 
-    print(features)
+    bound = np.mean(importances) - np.std(importances)
+
+    labels = features[features['Importance'] >= bound]['Feature'].tolist()
+
+    with open(f'{CURRENT_DIR}/selected_features_rfc.pickle', 'wb') as file:
+        pickle.dump(labels, file)
+
     scatter_plot(df, features.iat[0, 0], features.iat[1, 0])
 
     plt.figure(figsize=(10, 6))
