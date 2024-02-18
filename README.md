@@ -78,7 +78,10 @@ Sentiment Recognition in speech using Machine Learning (ML)
 
     To avoid "cheating", the `test.csv` will be comprised only of actresses whose audio clips won't be involved in the training process. They will essentially be completely unknown data. The `test.csv` will not be included at any part of the training.
 
-2. We use the `train.csv` exported in the previous step to find the features that seem most important
+2. To create some generic plots, execute:
+   > `python plots/general.py`
+
+3. We use the `train.csv` exported in the previous step to find the features that seem most important
    for our use case. We explored this using 3 different methods:
    - `PCA`:
      > `python feature_engineering/pca.py`
@@ -91,7 +94,7 @@ Sentiment Recognition in speech using Machine Learning (ML)
 
    The best results were achieved by using the feature importance from `RandomForestClassifier`.
 
-3. Model training & evaluation
+4. Model training & evaluation
 
    - We start by tuning the `SVM` hyperparameters using `GridSearchCV`:
      > `python models/svm_tuning.py`
@@ -107,5 +110,5 @@ Sentiment Recognition in speech using Machine Learning (ML)
 
    **Trained models are exported to a joblib file for use in the demo.**
 
-4. To test our model for both `SVM` and `KNN`, we just need to run the demo:
+5. To test our model for both `SVM` and `KNN`, we just need to run the demo:
     > `python demo/demo.py`
