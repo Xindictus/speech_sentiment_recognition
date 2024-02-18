@@ -10,10 +10,9 @@ import seaborn as sns
 
 from joblib import load
 from sklearn.metrics import (
-    accuracy_score, auc,
-    confusion_matrix, f1_score,
-    matthews_corrcoef, precision_score,
-    recall_score, roc_curve
+    accuracy_score, confusion_matrix,
+    f1_score, matthews_corrcoef,
+    precision_score, recall_score
 )
 from sklearn.preprocessing import LabelEncoder
 
@@ -50,7 +49,7 @@ def get_test_dataset() -> dict:
     y = label_encoder.fit_transform(labels)
 
     pickle_feat_path = \
-        f'{CURRENT_DIR}/../feature_engineering/selected_features.pickle'
+        f'{CURRENT_DIR}/../feature_engineering/selected_features_rfc.pickle'
 
     with open(pickle_feat_path, 'rb') as file:
         # Load the array from the pickle file
